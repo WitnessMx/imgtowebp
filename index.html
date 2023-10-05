@@ -1,0 +1,85 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+        <div>
+          <input type="file" multiple accept="image/*">
+        </div>
+      <script>
+
+        let fileSelector = document.querySelector('input[type=file]');
+
+
+
+
+        function processFile(file) {
+            if (!file) {
+                return;
+            }
+            console.log(file);
+
+
+            // Load the data into an image
+            new Promise(function (resolve, reject) {
+                let rawImage = new Image();
+                rawImage.addEventListener("load", function () {
+                    resolve(rawImage);
+                });
+                rawImage.src = URL.createObjectURL(file);
+            }).
+            then(function (rawImage) {
+                // Convert image to webp ObjectURL via a canvas blob
+                let canvas = document.createElement('canvas');
+                let ctx = canvas.getContext("2d");
+                canvas.width = rawImage.width;
+                canvas.height = rawImage.height;
+                ctx.drawImage(rawImage, 0, 0);
+                console.log(rawImage);
+                return new Promise(function (resolve, reject) {
+                    canvas.toBlob(function (blob) {resolve(URL.createObjectURL(blob));}, "image/webp");
+                });
+            }).
+            then(function (imageURL) {
+                // Load image for display on the page
+                let scaledImg = new Image();
+                return new Promise(function (resolve, reject) {
+                    scaledImg.addEventListener("load", function () {
+                    resolve({ imageURL, scaledImg });
+                    });
+                // console.log(imageURL);
+                scaledImg.setAttribute("src", imageURL);
+                });
+
+            }).
+            then(function (data) {
+               // Inject into the DOM
+                let imageLink = document.createElement("a");
+                console.log(data);
+                imageLink.setAttribute("href", data.imageURL);
+                imageLink.setAttribute('download', `${file.name}.webp`);
+               //imageLink.appendChild(data.scaledImg);
+                imageLink.click();
+                //imageBox.innerHTML = "";
+                //imageBox.appendChild(imageLink);
+            });
+            }
+          
+
+function processFiles(files) {
+  for (let file of files) {
+    processFile(file);
+  }
+}
+
+function fileSelectorChanged() {
+  processFiles(fileSelector.files);
+  fileSelector.value = "";
+}
+fileSelector.addEventListener("change", fileSelectorChanged);
+
+      </script>
+</body>
+</html>
